@@ -1,20 +1,20 @@
 import { useState } from 'react';
-import { WASHI_PALETTE, newId, type InitiativeStatus } from '../data/planningData';
-import type { Initiative } from '../data/timelineModel';
+import { WASHI_PALETTE, newId } from '../data/theme';
+import type { PlanningItem, PlanningItemStatus } from '../domain/types';
 import { TIMELINE_END, TIMELINE_START, snapDateToGrid } from '../data/timelineModel';
 
 interface Props {
-  onAdd: (ini: Initiative) => void;
+  onAdd: (item: PlanningItem) => void;
   onClose: () => void;
   existingRows: number;
-  initiatives: Initiative[];
+  items: PlanningItem[];
 }
 
-export function AddModal({ onAdd, onClose, existingRows, initiatives }: Props) {
+export function AddModal({ onAdd, onClose, existingRows, items }: Props) {
   const [form, setForm] = useState({
-    title: '', team: '', owner: '', startDate: '2026-01-01', endDate: '2026-04-01', parentId: '' as string,
+    title: '', team: '', owner: '', startDate: TIMELINE_START, endDate: '2026-04-01', parentId: '' as string,
     color: WASHI_PALETTE[0].bg, textColor: WASHI_PALETTE[0].text,
-    status: 'planning' as InitiativeStatus, description: '',
+    status: 'planning' as PlanningItemStatus, description: '',
   });
 
   const submit = (e: React.FormEvent) => {
@@ -34,7 +34,7 @@ export function AddModal({ onAdd, onClose, existingRows, initiatives }: Props) {
         <label>Title<input value={form.title} onChange={e => setForm(v => ({ ...v, title: e.target.value }))} autoFocus required /></label>
         <label>Parent<select value={form.parentId} onChange={e => setForm(v => ({ ...v, parentId: e.target.value }))}>
           <option value="">None — top-level initiative</option>
-          {[...initiatives].sort((a, b) => a.row - b.row).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+          {[...items].sort((a, b) => a.row - b.row).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
         </select></label>
         <small className="date-hint">Choose a parent to create a sub-initiative, story or deeper task.</small>
         <div className="two-col">
