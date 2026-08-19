@@ -20,25 +20,87 @@ import {
 
 const WEEK_WIDTH = 35;
 const DAY_WIDTH = WEEK_WIDTH / 7;
-const ROW_HEIGHT = 78;
-const BAR_HEIGHT = 34;
 const HANDLE_W = 9;
 const LABEL_WIDTH = 220;
 const TIMELINE_WIDTH = TIMELINE_DAYS * DAY_WIDTH;
+
+const rowHeightForDepth = (depth: number) => depth === 0 ? 78 : depth === 1 ? 54 : depth === 2 ? 38 : 30;
+const barHeightForDepth = (depth: number) => depth === 0 ? 34 : depth === 1 ? 24 : depth === 2 ? 14 : 8;
+
+interface LayoutItem {
+  initiative: Initiative;
+  depth: number;
+  top: number;
+  height: number;
+  barHeight: number;
+}
 
 export default function App() {
   const [initiatives, setInitiatives] = useState<Initiative[]>(INITIAL_TIMELINE_INITIATIVES);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
+  const [collapsedIds, setCollapsedIds] = useState<string[]>([]);
 
   const sorted = useMemo(() => [...initiatives].sort((a, b) => a.row - b.row), [initiatives]);
   const selected = initiatives.find(i => i.id === selectedId) ?? null;
+  const childCount = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of initiatives) {
+      if (item.parentId) counts.set(item.parentId, (counts.get(item.parentId) ?? 0) + 1);
+    }
+    return counts;
+  }, [initiatives]);
+
+  const layout = useMemo(() => {
+    const byParent = new Map<string | null, Initiative[]>();
+    const ids = new Set(initiatives.map(item => item.id));
+    for (const item of sorted) {
+      const parent = item.parentId && ids.has(item.parentId) ? item.parentId : null;
+      const siblings = byParent.get(parent) ?? [];
+      siblings.push(item);
+      byParent.set(parent, siblings);
+    }
+
+    const visible: LayoutItem[] = [];
+    let top = 0;
+    const walk = (parentId: string | null, depth: number) => {
+      for (const item of byParent.get(parentId) ?? []) {
+        const height = rowHeightForDepth(depth);
+        const barHeight = barHeightForDepth(depth);
+        visible.push({ initiative: item, depth, top, height, barHeight });
+        top += height;
+        if (!collapsedIds.includes(item.id)) walk(item.id, depth + 1);
+      }
+    };
+    walk(null, 0);
+    return { items: visible, totalHeight: top };
+  }, [sorted, initiatives, collapsedIds]);
 
   const update = (next: Initiative) => setInitiatives(items => items.map(i => i.id === next.id ? next : i));
+
   const remove = (id: string) => {
-    setInitiatives(items => items.filter(i => i.id !== id).map((i, row) => ({ ...i, row, dependencies: i.dependencies.filter(d => d !== id) })));
+    setInitiatives(items => {
+      const deleting = new Set<string>([id]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const item of items) {
+          if (item.parentId && deleting.has(item.parentId) && !deleting.has(item.id)) {
+            deleting.add(item.id);
+            changed = true;
+          }
+        }
+      }
+      return items
+        .filter(item => !deleting.has(item.id))
+        .map((item, row) => ({ ...item, row, dependencies: item.dependencies.filter(dep => !deleting.has(dep)) }));
+    });
     setSelectedId(null);
+  };
+
+  const toggleCollapsed = (id: string) => {
+    setCollapsedIds(ids => ids.includes(id) ? ids.filter(item => item !== id) : [...ids, id]);
   };
 
   const connectOrSelect = (id: string) => {
@@ -103,14 +165,14 @@ export default function App() {
         </div>
         <div className="top-actions">
           {connectingFrom && <button onClick={() => setConnectingFrom(null)}>Cancel dependency</button>}
-          <button className="primary" onClick={() => setShowAdd(true)}>+ Add initiative</button>
+          <button className="primary" onClick={() => setShowAdd(true)}>+ Add item</button>
         </div>
       </header>
 
       <main className="workspace">
         <div className="planner-scroll planner" onClick={() => { setSelectedId(null); if (connectingFrom) setConnectingFrom(null); }}>
           <div className="month-header" style={{ width: LABEL_WIDTH + TIMELINE_WIDTH }}>
-            <div className="corner" style={{ width: LABEL_WIDTH }}>Initiative</div>
+            <div className="corner" style={{ width: LABEL_WIDTH }}>Planning item</div>
             <div className="timeline-head" style={{ width: TIMELINE_WIDTH }}>
               <div className="month-row">
                 {MONTH_SEGMENTS.map(segment => (
@@ -123,7 +185,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="rows" style={{ width: LABEL_WIDTH + TIMELINE_WIDTH }}>
+          <div className="rows" style={{ width: LABEL_WIDTH + TIMELINE_WIDTH, minHeight: layout.totalHeight }}>
             <div className="month-columns" style={{ left: LABEL_WIDTH }}>
               {MONTH_SEGMENTS.map(segment => <div key={segment.key} style={{ width: segment.days * DAY_WIDTH, background: MONTH_BAND_COLORS[segment.monthIndex ?? 0] }} />)}
             </div>
@@ -131,40 +193,58 @@ export default function App() {
               {WEEK_SEGMENTS.map(segment => <div key={segment.key} style={{ width: segment.days * DAY_WIDTH }} />)}
             </div>
 
-            <DependencyArrows initiatives={sorted} dayWidth={DAY_WIDTH} timelineDays={TIMELINE_DAYS} rowHeight={ROW_HEIGHT} offsetLeft={LABEL_WIDTH} />
+            <DependencyArrows
+              items={layout.items.map(({ initiative, top, height }) => ({ initiative, top, height }))}
+              dayWidth={DAY_WIDTH}
+              timelineDays={TIMELINE_DAYS}
+              totalHeight={layout.totalHeight}
+              offsetLeft={LABEL_WIDTH}
+            />
 
-            {sorted.map(ini => (
-              <div className="initiative-row" key={ini.id} style={{ height: ROW_HEIGHT }}>
-                <button className="row-label" style={{ width: LABEL_WIDTH }} onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}>
-                  <span className="colour-chip" style={{ background: ini.color }} />
-                  <span><strong>{ini.title}</strong><small>{ini.team}</small></span>
-                </button>
-                <div className="bar-area" style={{ width: TIMELINE_WIDTH, height: ROW_HEIGHT }} onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}>
-                  <WashiBar
-                    initiative={ini}
-                    isSelected={selectedId === ini.id}
-                    isConnecting={connectingFrom !== null}
-                    connectingFrom={connectingFrom}
-                    dayWidth={DAY_WIDTH}
-                    rowHeight={ROW_HEIGHT}
-                    barHeight={BAR_HEIGHT}
-                    handleWidth={HANDLE_W}
-                    onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}
-                    onDragStart={e => beginPointerMove(e, ini.id, 'drag')}
-                    onResizeLeft={e => beginPointerMove(e, ini.id, 'resize-left')}
-                    onResizeRight={e => beginPointerMove(e, ini.id, 'resize-right')}
-                  />
-                  {ini.milestones.map(m => <MilestonePin key={m.id} milestone={m} dayWidth={DAY_WIDTH} rowHeight={ROW_HEIGHT} barHeight={BAR_HEIGHT} />)}
+            {layout.items.map(({ initiative: ini, depth, height, barHeight }) => {
+              const hasChildren = (childCount.get(ini.id) ?? 0) > 0;
+              const isCollapsed = collapsedIds.includes(ini.id);
+              return (
+                <div className={`initiative-row depth-${Math.min(depth, 3)}`} key={ini.id} style={{ height }}>
+                  <div className="row-label" style={{ width: LABEL_WIDTH, paddingLeft: 10 + depth * 17 }}>
+                    <button
+                      type="button"
+                      className={`hierarchy-toggle ${hasChildren ? '' : 'empty'}`}
+                      onClick={e => { e.stopPropagation(); if (hasChildren) toggleCollapsed(ini.id); }}
+                      aria-label={hasChildren ? (isCollapsed ? 'Expand children' : 'Collapse children') : undefined}
+                    >{hasChildren ? (isCollapsed ? '▸' : '▾') : '·'}</button>
+                    <button className="row-label-main" onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}>
+                      <span className="colour-chip" style={{ background: ini.color }} />
+                      <span><strong>{ini.title}</strong><small>{ini.team || (depth === 0 ? 'Initiative' : depth === 1 ? 'Sub-initiative' : depth === 2 ? 'Story' : 'Task')}</small></span>
+                    </button>
+                  </div>
+                  <div className="bar-area" style={{ width: TIMELINE_WIDTH, height }} onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}>
+                    <WashiBar
+                      initiative={ini}
+                      isSelected={selectedId === ini.id}
+                      isConnecting={connectingFrom !== null}
+                      connectingFrom={connectingFrom}
+                      dayWidth={DAY_WIDTH}
+                      rowHeight={height}
+                      barHeight={barHeight}
+                      handleWidth={Math.min(HANDLE_W, Math.max(4, barHeight / 3))}
+                      onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}
+                      onDragStart={e => beginPointerMove(e, ini.id, 'drag')}
+                      onResizeLeft={e => beginPointerMove(e, ini.id, 'resize-left')}
+                      onResizeRight={e => beginPointerMove(e, ini.id, 'resize-right')}
+                    />
+                    {ini.milestones.map(m => <MilestonePin key={m.id} milestone={m} dayWidth={DAY_WIDTH} rowHeight={height} barHeight={barHeight} />)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
         {selected && <DetailPanel initiative={selected} initiatives={initiatives} onClose={() => setSelectedId(null)} onUpdate={update} onDelete={remove} onStartConnect={id => setConnectingFrom(id)} />}
       </main>
 
-      {showAdd && <AddModal existingRows={sorted.length} onClose={() => setShowAdd(false)} onAdd={ini => { setInitiatives(items => [...items, ini]); setShowAdd(false); setSelectedId(ini.id); }} />}
+      {showAdd && <AddModal existingRows={initiatives.length} initiatives={initiatives} onClose={() => setShowAdd(false)} onAdd={ini => { setInitiatives(items => [...items, ini]); setShowAdd(false); setSelectedId(ini.id); if (ini.parentId) setCollapsedIds(ids => ids.filter(id => id !== ini.parentId)); }} />}
     </div>
   );
 }
