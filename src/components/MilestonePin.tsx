@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { MILESTONE_COLORS } from '../data/planningData';
-import type { Milestone } from '../data/timelineModel';
+import { MILESTONE_COLORS } from '../data/theme';
+import type { Milestone } from '../domain/types';
 import { WEEK_SEGMENTS, dateToDayOffset, formatDateShort } from '../data/timelineModel';
 
 const TYPE_LABELS: Record<string, string> = { deadline: 'Deadline', launch: 'Launch', review: 'Review', release: 'Release' };
 
 interface Props { milestone: Milestone; dayWidth: number; rowHeight: number; barHeight: number; }
 
-export function MilestonePin({ milestone, dayWidth, rowHeight }: Props) {
+export function MilestonePin({ milestone, dayWidth }: Props) {
   const [showTip, setShowTip] = useState(false);
   const stickerSize = 20;
   const edgeInset = 2;
