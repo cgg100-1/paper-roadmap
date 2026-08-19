@@ -7,11 +7,12 @@ interface Props {
   onAdd: (ini: Initiative) => void;
   onClose: () => void;
   existingRows: number;
+  initiatives: Initiative[];
 }
 
-export function AddModal({ onAdd, onClose, existingRows }: Props) {
+export function AddModal({ onAdd, onClose, existingRows, initiatives }: Props) {
   const [form, setForm] = useState({
-    title: '', team: '', owner: '', startDate: '2026-01-01', endDate: '2026-04-01',
+    title: '', team: '', owner: '', startDate: '2026-01-01', endDate: '2026-04-01', parentId: '' as string,
     color: WASHI_PALETTE[0].bg, textColor: WASHI_PALETTE[0].text,
     status: 'planning' as InitiativeStatus, description: '',
   });
@@ -22,14 +23,20 @@ export function AddModal({ onAdd, onClose, existingRows }: Props) {
     const startDate = snapDateToGrid(form.startDate);
     const endDate = snapDateToGrid(form.endDate);
     if (endDate <= startDate) return;
-    onAdd({ id: newId(), ...form, startDate, endDate, row: existingRows, dependencies: [], milestones: [] });
+    const { parentId, ...rest } = form;
+    onAdd({ id: newId(), ...rest, startDate, endDate, parentId: parentId || null, row: existingRows, dependencies: [], milestones: [] });
   };
 
   return (
     <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <form className="modal-card" onSubmit={submit}>
-        <h2>New initiative</h2>
+        <h2>New planning item</h2>
         <label>Title<input value={form.title} onChange={e => setForm(v => ({ ...v, title: e.target.value }))} autoFocus required /></label>
+        <label>Parent<select value={form.parentId} onChange={e => setForm(v => ({ ...v, parentId: e.target.value }))}>
+          <option value="">None — top-level initiative</option>
+          {[...initiatives].sort((a, b) => a.row - b.row).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+        </select></label>
+        <small className="date-hint">Choose a parent to create a sub-initiative, story or deeper task.</small>
         <div className="two-col">
           <label>Team<input value={form.team} onChange={e => setForm(v => ({ ...v, team: e.target.value }))} /></label>
           <label>Owner<input value={form.owner} onChange={e => setForm(v => ({ ...v, owner: e.target.value }))} /></label>
