@@ -1,5 +1,6 @@
-import type { Initiative, InitiativeStatus } from '../data/planningData';
-import { MONTHS, STATUS_STYLES } from '../data/planningData';
+import { STATUS_STYLES, type InitiativeStatus } from '../data/planningData';
+import type { Initiative } from '../data/timelineModel';
+import { formatDateShort, snapDateToGrid, TIMELINE_END, TIMELINE_START } from '../data/timelineModel';
 
 interface Props {
   initiative: Initiative;
@@ -17,6 +18,16 @@ export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDele
   const dependencyNames = initiative.dependencies
     .map(id => initiatives.find(i => i.id === id)?.title)
     .filter(Boolean);
+
+  const updateStart = (value: string) => {
+    const startDate = snapDateToGrid(value);
+    if (startDate < initiative.endDate) patch({ startDate });
+  };
+
+  const updateEnd = (value: string) => {
+    const endDate = snapDateToGrid(value);
+    if (endDate > initiative.startDate) patch({ endDate });
+  };
 
   return (
     <aside className="detail-panel">
@@ -37,9 +48,10 @@ export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDele
         </section>
 
         <section className="two-col">
-          <label>Start<select value={initiative.startMonth} onChange={e => patch({ startMonth: Number(e.target.value) })}>{MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}</select></label>
-          <label>End<select value={initiative.endMonth} onChange={e => patch({ endMonth: Number(e.target.value) })}>{MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}</select></label>
+          <label>Start<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={initiative.startDate} onChange={e => updateStart(e.target.value)} /></label>
+          <label>End<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={initiative.endDate} onChange={e => updateEnd(e.target.value)} /></label>
         </section>
+        <small className="date-hint">Initiatives snap to Mondays and month boundaries.</small>
 
         <section>
           <label>Team<input value={initiative.team} onChange={e => patch({ team: e.target.value })} /></label>
@@ -55,7 +67,7 @@ export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDele
 
         <section>
           <span className="eyebrow">Milestones</span>
-          {initiative.milestones.map(m => <div key={m.id} className="milestone-row"><span>{m.title}</span><span>{MONTHS[m.month]}</span></div>)}
+          {initiative.milestones.map(m => <div key={m.id} className="milestone-row"><span>{m.title}</span><span>{formatDateShort(m.date)}</span></div>)}
         </section>
 
         <button className="danger" onClick={() => onDelete(initiative.id)}>Delete initiative</button>
