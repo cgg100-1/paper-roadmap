@@ -13,4 +13,8 @@ These rules apply to human and AI changes in this repository.
 - Prefer small reusable functions over duplicated inline logic.
 - New non-trivial domain logic should include focused tests.
 - Preserve the tactile paper/washi visual language without coupling it to the underlying planning model.
+- Shared visual semantics such as paper, ink, borders, typography, radii and shadows belong in CSS custom properties in `src/index.css`.
+- Page- or component-specific visual palettes belong in their stylesheet; runtime visual values needed by TypeScript belong in `src/data/theme.ts`.
+- Avoid inline presentation styles in React. Inline styles are reserved for genuinely data-driven geometry or colours such as timeline positions, widths, item colours and CSS custom-property values.
+- Planner hierarchy dimensions such as row heights, bar heights, indents and milestone sticker dimensions must come from `PLANNER_VISUALS`, not component-local magic numbers.
 - Run `npm run test` and `npm run build` before considering a structural change complete.
