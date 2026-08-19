@@ -79,13 +79,13 @@ export function DetailPanel({ item, items, onClose, onUpdate, onDelete, onStartC
         </section>
 
         <section>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div className="panel-section-head">
             <span className="eyebrow">Milestones</span>
             <button type="button" onClick={() => setAddingMilestone(value => !value)}>{addingMilestone ? 'Cancel' : '+ Add milestone'}</button>
           </div>
 
           {addingMilestone && (
-            <div style={{ display: 'grid', gap: 8, padding: 10, border: '1px solid rgba(44,36,24,.12)', borderRadius: 8, background: '#fff8' }}>
+            <div className="milestone-editor-card">
               <label>Title<input value={draftMilestone.title} onChange={e => setDraftMilestone(v => ({ ...v, title: e.target.value }))} placeholder="e.g. Production release" /></label>
               <div className="two-col">
                 <label>Date<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={draftMilestone.date} onChange={e => setDraftMilestone(v => ({ ...v, date: e.target.value }))} /></label>
@@ -97,13 +97,13 @@ export function DetailPanel({ item, items, onClose, onUpdate, onDelete, onStartC
 
           {item.milestones.length === 0 && <div className="dependency-list">None</div>}
           {item.milestones.map(m => (
-            <div key={m.id} style={{ display: 'grid', gap: 7, padding: '9px 0', borderBottom: '1px solid rgba(44,36,24,.08)' }}>
+            <div key={m.id} className="milestone-editor-row">
               <input aria-label="Milestone title" value={m.title} onChange={e => updateMilestone(m.id, { title: e.target.value })} />
               <div className="two-col">
                 <label>Date<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={m.date} onChange={e => updateMilestone(m.id, { date: e.target.value })} /></label>
                 <label>Type<select value={m.type} onChange={e => updateMilestone(m.id, { type: e.target.value as MilestoneType })}>{MILESTONE_TYPES.map(type => <option key={type} value={type}>{type}</option>)}</select></label>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <div className="milestone-editor-footer">
                 <span className="milestone-row">{formatDateShort(m.date)}</span>
                 <button type="button" className="danger" onClick={() => removeMilestone(m.id)}>Delete milestone</button>
               </div>
