@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import type { Initiative, InitiativeStatus } from '../data/planningData';
-import { TIMELINE_END, TIMELINE_START, WASHI_PALETTE, newId, snapDateToGrid } from '../data/planningData';
+import { WASHI_PALETTE, newId, type InitiativeStatus } from '../data/planningData';
+import type { Initiative } from '../data/timelineModel';
+import { TIMELINE_END, TIMELINE_START, snapDateToGrid } from '../data/timelineModel';
 
 interface Props {
   onAdd: (ini: Initiative) => void;
