@@ -1,72 +1,51 @@
 import { useState } from 'react';
-import { STATUS_STYLES, newId, type InitiativeStatus, type MilestoneType } from '../data/planningData';
-import type { Initiative, Milestone } from '../data/timelineModel';
+import { STATUS_STYLES, newId } from '../data/theme';
+import type { Milestone, MilestoneType, PlanningItem, PlanningItemStatus } from '../domain/types';
 import { formatDateShort, snapDateToGrid, TIMELINE_END, TIMELINE_START } from '../data/timelineModel';
 
 interface Props {
-  initiative: Initiative;
-  initiatives: Initiative[];
+  item: PlanningItem;
+  items: PlanningItem[];
   onClose: () => void;
-  onUpdate: (ini: Initiative) => void;
+  onUpdate: (item: PlanningItem) => void;
   onDelete: (id: string) => void;
   onStartConnect: (fromId: string) => void;
 }
 
-const STATUSES: InitiativeStatus[] = ['planning', 'active', 'complete', 'blocked'];
+const STATUSES: PlanningItemStatus[] = ['planning', 'active', 'complete', 'blocked'];
 const MILESTONE_TYPES: MilestoneType[] = ['deadline', 'launch', 'review', 'release'];
 
-export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDelete, onStartConnect }: Props) {
+export function DetailPanel({ item, items, onClose, onUpdate, onDelete, onStartConnect }: Props) {
   const [addingMilestone, setAddingMilestone] = useState(false);
-  const [draftMilestone, setDraftMilestone] = useState<Omit<Milestone, 'id'>>({
-    title: '',
-    date: initiative.startDate,
-    type: 'deadline',
-  });
+  const [draftMilestone, setDraftMilestone] = useState<Omit<Milestone, 'id'>>({ title: '', date: item.startDate, type: 'deadline' });
 
-  const patch = (next: Partial<Initiative>) => onUpdate({ ...initiative, ...next });
-  const dependencyNames = initiative.dependencies
-    .map(id => initiatives.find(i => i.id === id)?.title)
-    .filter(Boolean);
+  const patch = (next: Partial<PlanningItem>) => onUpdate({ ...item, ...next });
+  const dependencyNames = item.dependencies.map(id => items.find(candidate => candidate.id === id)?.title).filter(Boolean);
 
   const updateStart = (value: string) => {
     const startDate = snapDateToGrid(value);
-    if (startDate < initiative.endDate) patch({ startDate });
+    if (startDate < item.endDate) patch({ startDate });
   };
 
   const updateEnd = (value: string) => {
     const endDate = snapDateToGrid(value);
-    if (endDate > initiative.startDate) patch({ endDate });
+    if (endDate > item.startDate) patch({ endDate });
   };
 
-  const updateMilestone = (id: string, next: Partial<Milestone>) => {
-    patch({ milestones: initiative.milestones.map(m => m.id === id ? { ...m, ...next } : m) });
-  };
-
-  const removeMilestone = (id: string) => {
-    patch({ milestones: initiative.milestones.filter(m => m.id !== id) });
-  };
+  const updateMilestone = (id: string, next: Partial<Milestone>) => patch({ milestones: item.milestones.map(m => m.id === id ? { ...m, ...next } : m) });
+  const removeMilestone = (id: string) => patch({ milestones: item.milestones.filter(m => m.id !== id) });
 
   const addMilestone = () => {
     if (!draftMilestone.title.trim()) return;
-    patch({
-      milestones: [
-        ...initiative.milestones,
-        {
-          id: newId(),
-          title: draftMilestone.title.trim(),
-          date: draftMilestone.date,
-          type: draftMilestone.type,
-        },
-      ],
-    });
-    setDraftMilestone({ title: '', date: initiative.startDate, type: 'deadline' });
+    patch({ milestones: [...item.milestones, { id: newId(), title: draftMilestone.title.trim(), date: draftMilestone.date, type: draftMilestone.type }] });
+    setDraftMilestone({ title: '', date: item.startDate, type: 'deadline' });
     setAddingMilestone(false);
   };
 
   return (
     <aside className="detail-panel">
       <div className="panel-head">
-        <input className="title-input" value={initiative.title} onChange={e => patch({ title: e.target.value })} />
+        <input className="title-input" value={item.title} onChange={e => patch({ title: e.target.value })} />
         <button onClick={onClose}>×</button>
       </div>
 
@@ -76,27 +55,27 @@ export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDele
           <div className="status-row">
             {STATUSES.map(status => {
               const style = STATUS_STYLES[status];
-              return <button key={status} className={initiative.status === status ? 'status active' : 'status'} onClick={() => patch({ status })} style={initiative.status === status ? { background: style.bg, color: style.text } : undefined}>{style.label}</button>;
+              return <button key={status} className={item.status === status ? 'status active' : 'status'} onClick={() => patch({ status })} style={item.status === status ? { background: style.bg, color: style.text } : undefined}>{style.label}</button>;
             })}
           </div>
         </section>
 
         <section className="two-col">
-          <label>Start<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={initiative.startDate} onChange={e => updateStart(e.target.value)} /></label>
-          <label>End<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={initiative.endDate} onChange={e => updateEnd(e.target.value)} /></label>
+          <label>Start<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={item.startDate} onChange={e => updateStart(e.target.value)} /></label>
+          <label>End<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={item.endDate} onChange={e => updateEnd(e.target.value)} /></label>
         </section>
-        <small className="date-hint">Initiatives snap to Mondays and month boundaries.</small>
+        <small className="date-hint">Planning items snap to Mondays and month boundaries.</small>
 
         <section>
-          <label>Team<input value={initiative.team} onChange={e => patch({ team: e.target.value })} /></label>
-          <label>Owner<input value={initiative.owner} onChange={e => patch({ owner: e.target.value })} /></label>
-          <label>Description<textarea value={initiative.description} onChange={e => patch({ description: e.target.value })} /></label>
+          <label>Team<input value={item.team} onChange={e => patch({ team: e.target.value })} /></label>
+          <label>Owner<input value={item.owner} onChange={e => patch({ owner: e.target.value })} /></label>
+          <label>Description<textarea value={item.description} onChange={e => patch({ description: e.target.value })} /></label>
         </section>
 
         <section>
           <span className="eyebrow">Dependencies</span>
           <div className="dependency-list">{dependencyNames.length ? dependencyNames.join(' · ') : 'None'}</div>
-          <button onClick={() => onStartConnect(initiative.id)}>Add dependency</button>
+          <button onClick={() => onStartConnect(item.id)}>Add dependency</button>
         </section>
 
         <section>
@@ -116,9 +95,8 @@ export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDele
             </div>
           )}
 
-          {initiative.milestones.length === 0 && <div className="dependency-list">None</div>}
-
-          {initiative.milestones.map(m => (
+          {item.milestones.length === 0 && <div className="dependency-list">None</div>}
+          {item.milestones.map(m => (
             <div key={m.id} style={{ display: 'grid', gap: 7, padding: '9px 0', borderBottom: '1px solid rgba(44,36,24,.08)' }}>
               <input aria-label="Milestone title" value={m.title} onChange={e => updateMilestone(m.id, { title: e.target.value })} />
               <div className="two-col">
@@ -133,7 +111,7 @@ export function DetailPanel({ initiative, initiatives, onClose, onUpdate, onDele
           ))}
         </section>
 
-        <button className="danger" onClick={() => onDelete(initiative.id)}>Delete initiative</button>
+        <button className="danger" onClick={() => onDelete(item.id)}>Delete planning item</button>
       </div>
     </aside>
   );
