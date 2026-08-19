@@ -1,0 +1,4 @@
+.panel-section-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.milestone-editor-card { display:grid; gap:8px; padding:10px; border:1px solid var(--line); border-radius:8px; background:#fff8; }
+.milestone-editor-row { display:grid; gap:7px; padding:9px 0; border-bottom:1px solid rgba(44,36,24,.08); }
+.milestone-editor-footer { display:flex; justify-content:space-between; align-items:center; gap:8px; }
