@@ -31,11 +31,22 @@ button.primary { background:#2c2418; color:#f7f3ed; border-color:#2c2418; }
 .week-columns { z-index:1; }
 .week-columns > div { height:100%; border-left:1px solid rgba(44,36,24,.065); background:transparent; }
 .initiative-row { display:flex; position:relative; border-bottom:1px solid rgba(44,36,24,.06); }
-.row-label { width:220px; flex:none; position:sticky; left:0; z-index:10; display:flex; align-items:center; gap:10px; text-align:left; border:0; border-right:1px solid rgba(44,36,24,.12); border-radius:0; background:#f7f3edf2; padding:0 18px; }
-.row-label strong,.row-label small { display:block; }
-.row-label strong { font-size:12.5px; font-weight:500; }
-.row-label small { margin-top:3px; font:9.5px 'DM Mono',monospace; color:#8b7a6b; }
+.initiative-row.depth-0 { border-top:1px solid rgba(44,36,24,.055); }
+.initiative-row.depth-1 { background:rgba(255,255,255,.06); }
+.initiative-row.depth-2,.initiative-row.depth-3 { background:rgba(255,255,255,.11); }
+.row-label { width:220px; flex:none; position:sticky; left:0; z-index:10; display:flex; align-items:center; text-align:left; border-right:1px solid rgba(44,36,24,.12); background:#f7f3edf2; padding-right:8px; }
+.row-label-main { min-width:0; flex:1; display:flex; align-items:center; gap:9px; text-align:left; border:0; border-radius:0; background:transparent; padding:5px 2px; }
+.row-label-main strong,.row-label-main small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.row-label-main strong { font-size:12.5px; font-weight:500; }
+.depth-1 .row-label-main strong { font-size:11.5px; }
+.depth-2 .row-label-main strong,.depth-3 .row-label-main strong { font-size:10.5px; font-weight:400; }
+.row-label-main small { margin-top:3px; font:9.5px 'DM Mono',monospace; color:#8b7a6b; }
+.depth-2 .row-label-main small,.depth-3 .row-label-main small { font-size:8px; margin-top:1px; }
+.hierarchy-toggle { flex:none; width:20px; height:20px; padding:0; border:0; background:transparent; color:#8b7a6b; font-size:12px; line-height:20px; text-align:center; }
+.hierarchy-toggle.empty { opacity:.28; cursor:default; }
 .colour-chip { width:9px; height:9px; border-radius:2px; flex:none; }
+.depth-1 .colour-chip { width:8px; height:8px; }
+.depth-2 .colour-chip,.depth-3 .colour-chip { width:6px; height:6px; }
 .bar-area { position:relative; flex:none; }
 .washi-bar { transition: box-shadow .15s ease, transform .12s ease; }
 .washi-bar:hover { box-shadow:0 3px 14px rgba(0,0,0,.16)!important; transform:translateY(-1px); }
