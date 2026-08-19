@@ -1,37 +1,7 @@
-import {
-  INITIAL_INITIATIVES as LEGACY_INITIATIVES,
-  MONTHS,
-  YEAR,
-  type InitiativeStatus,
-  type MilestoneType,
-} from './planningData';
+import { MONTH_LABELS, PLANNER_CONFIG } from '../config/plannerConfig';
 
-export interface Milestone {
-  id: string;
-  title: string;
-  date: string;
-  type: MilestoneType;
-}
-
-export interface Initiative {
-  id: string;
-  title: string;
-  team: string;
-  color: string;
-  textColor: string;
-  startDate: string;
-  endDate: string;
-  row: number;
-  parentId: string | null;
-  dependencies: string[];
-  milestones: Milestone[];
-  status: InitiativeStatus;
-  description: string;
-  owner: string;
-}
-
-export const TIMELINE_START = `${YEAR}-01-01`;
-export const TIMELINE_END = `${YEAR + 1}-04-01`;
+export const TIMELINE_START = PLANNER_CONFIG.timelineStart;
+export const TIMELINE_END = PLANNER_CONFIG.timelineEnd;
 const DAY_MS = 86_400_000;
 
 const toUtcMs = (value: string) => {
@@ -52,7 +22,6 @@ const clampTimelineDate = (date: string) => {
 };
 
 const isMonday = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay() === 1;
-
 const nextMonth = (date: string) => {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCMonth(d.getUTCMonth() + 1, 1);
@@ -61,14 +30,18 @@ const nextMonth = (date: string) => {
 
 const SNAP_POINTS = (() => {
   const candidates = new Set<string>([TIMELINE_START, TIMELINE_END]);
-  let monthCursor = TIMELINE_START;
-  while (monthCursor < TIMELINE_END) {
-    candidates.add(monthCursor);
-    monthCursor = nextMonth(monthCursor);
+  if (PLANNER_CONFIG.snapToMonthStarts) {
+    let cursor = TIMELINE_START;
+    while (cursor < TIMELINE_END) {
+      candidates.add(cursor);
+      cursor = nextMonth(cursor);
+    }
   }
-  for (let day = 0; day <= TIMELINE_DAYS; day += 1) {
-    const candidate = addDays(TIMELINE_START, day);
-    if (isMonday(candidate)) candidates.add(candidate);
+  if (PLANNER_CONFIG.snapToMondays) {
+    for (let day = 0; day <= TIMELINE_DAYS; day += 1) {
+      const candidate = addDays(TIMELINE_START, day);
+      if (isMonday(candidate)) candidates.add(candidate);
+    }
   }
   return [...candidates].sort();
 })();
@@ -87,6 +60,7 @@ export interface TimelineSegment {
   endDate: string;
   days: number;
   monthIndex?: number;
+  year?: number;
 }
 
 export const MONTH_SEGMENTS: TimelineSegment[] = (() => {
@@ -96,15 +70,9 @@ export const MONTH_SEGMENTS: TimelineSegment[] = (() => {
     const d = new Date(`${cursor}T00:00:00Z`);
     const monthIndex = d.getUTCMonth();
     const year = d.getUTCFullYear();
-    const endDate = nextMonth(cursor) > TIMELINE_END ? TIMELINE_END : nextMonth(cursor);
-    segments.push({
-      key: `month-${cursor}`,
-      label: monthIndex === 0 ? `${MONTHS[monthIndex]} ${year}` : MONTHS[monthIndex],
-      startDate: cursor,
-      endDate,
-      days: daysBetween(cursor, endDate),
-      monthIndex,
-    });
+    const next = nextMonth(cursor);
+    const endDate = next > TIMELINE_END ? TIMELINE_END : next;
+    segments.push({ key: `month-${cursor}`, label: monthIndex === 0 ? `${MONTH_LABELS[monthIndex]} ${year}` : MONTH_LABELS[monthIndex], startDate: cursor, endDate, days: daysBetween(cursor, endDate), monthIndex, year });
     cursor = endDate;
   }
   return segments;
@@ -117,13 +85,7 @@ export const YEAR_SEGMENTS: TimelineSegment[] = (() => {
     const year = new Date(`${cursor}T00:00:00Z`).getUTCFullYear();
     const nextYear = `${year + 1}-01-01`;
     const endDate = nextYear < TIMELINE_END ? nextYear : TIMELINE_END;
-    segments.push({
-      key: `year-${year}`,
-      label: String(year),
-      startDate: cursor,
-      endDate,
-      days: daysBetween(cursor, endDate),
-    });
+    segments.push({ key: `year-${year}`, label: String(year), startDate: cursor, endDate, days: daysBetween(cursor, endDate), year });
     cursor = endDate;
   }
   return segments;
@@ -151,33 +113,4 @@ export const WEEK_SEGMENTS: TimelineSegment[] = (() => {
   return segments;
 })();
 
-export const formatDateShort = (date: string) => new Intl.DateTimeFormat('en-GB', {
-  day: 'numeric',
-  month: 'short',
-}).format(new Date(`${date}T00:00:00Z`));
-
-const monthStart = (month: number) => `${YEAR}-${String(month + 1).padStart(2, '0')}-01`;
-const monthAfter = (month: number) => month === 11 ? `${YEAR + 1}-01-01` : `${YEAR}-${String(month + 2).padStart(2, '0')}-01`;
-const monthMiddle = (month: number) => `${YEAR}-${String(month + 1).padStart(2, '0')}-15`;
-
-export const INITIAL_TIMELINE_INITIATIVES: Initiative[] = LEGACY_INITIATIVES.map(initiative => ({
-  id: initiative.id,
-  title: initiative.title,
-  team: initiative.team,
-  color: initiative.color,
-  textColor: initiative.textColor,
-  startDate: monthStart(initiative.startMonth),
-  endDate: monthAfter(initiative.endMonth),
-  row: initiative.row,
-  parentId: null,
-  dependencies: [...initiative.dependencies],
-  milestones: initiative.milestones.map(milestone => ({
-    id: milestone.id,
-    title: milestone.title,
-    date: monthMiddle(milestone.month),
-    type: milestone.type,
-  })),
-  status: initiative.status,
-  description: initiative.description,
-  owner: initiative.owner,
-}));
+export const formatDateShort = (date: string) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(new Date(`${date}T00:00:00Z`));
