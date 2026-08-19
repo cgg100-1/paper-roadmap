@@ -1,17 +1,18 @@
 import type { Initiative } from '../data/planningData';
+import { dateToDayOffset } from '../data/planningData';
 
 interface Props {
   initiatives: Initiative[];
-  monthWidth: number;
+  dayWidth: number;
+  timelineDays: number;
   rowHeight: number;
-  barHeight: number;
   offsetLeft: number;
 }
 
-export function DependencyArrows({ initiatives, monthWidth, rowHeight, offsetLeft }: Props) {
+export function DependencyArrows({ initiatives, dayWidth, timelineDays, rowHeight, offsetLeft }: Props) {
   const totalRows = initiatives.reduce((max, i) => Math.max(max, i.row), 0) + 1;
   const svgHeight = totalRows * rowHeight + 40;
-  const svgWidth = 12 * monthWidth;
+  const svgWidth = timelineDays * dayWidth;
   const byId = new Map(initiatives.map(i => [i.id, i]));
   const edges: Array<{ from: Initiative; to: Initiative }> = [];
 
@@ -33,9 +34,9 @@ export function DependencyArrows({ initiatives, monthWidth, rowHeight, offsetLef
         </marker>
       </defs>
       {edges.map(({ from, to }, idx) => {
-        const startX = (from.endMonth + 1) * monthWidth;
+        const startX = dateToDayOffset(from.endDate) * dayWidth;
         const startY = barMidY(from.row);
-        const endX = to.startMonth * monthWidth;
+        const endX = dateToDayOffset(to.startDate) * dayWidth;
         const endY = barMidY(to.row);
         let d: string;
         if (endX > startX + 10) {
