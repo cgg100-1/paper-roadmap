@@ -1,8 +1,8 @@
-import type { Initiative } from '../data/timelineModel';
+import type { PlanningItem } from '../domain/types';
 import { dateToDayOffset } from '../data/timelineModel';
 
 export interface DependencyLayoutItem {
-  initiative: Initiative;
+  item: PlanningItem;
   top: number;
   height: number;
 }
@@ -17,18 +17,18 @@ interface Props {
 
 export function DependencyArrows({ items, dayWidth, timelineDays, totalHeight, offsetLeft }: Props) {
   const svgWidth = timelineDays * dayWidth;
-  const byId = new Map(items.map(item => [item.initiative.id, item]));
+  const byId = new Map(items.map(layoutItem => [layoutItem.item.id, layoutItem]));
   const edges: Array<{ from: DependencyLayoutItem; to: DependencyLayoutItem }> = [];
 
-  for (const item of items) {
-    for (const depId of item.initiative.dependencies) {
+  for (const layoutItem of items) {
+    for (const depId of layoutItem.item.dependencies) {
       const dep = byId.get(depId);
-      if (dep) edges.push({ from: dep, to: item });
+      if (dep) edges.push({ from: dep, to: layoutItem });
     }
   }
 
   if (edges.length === 0) return null;
-  const barMidY = (item: DependencyLayoutItem) => item.top + item.height / 2;
+  const barMidY = (layoutItem: DependencyLayoutItem) => layoutItem.top + layoutItem.height / 2;
 
   return (
     <svg style={{ position: 'absolute', left: offsetLeft, top: 0, pointerEvents: 'none', zIndex: 3, overflow: 'visible' }} width={svgWidth} height={totalHeight + 20}>
@@ -38,9 +38,9 @@ export function DependencyArrows({ items, dayWidth, timelineDays, totalHeight, o
         </marker>
       </defs>
       {edges.map(({ from, to }, idx) => {
-        const startX = dateToDayOffset(from.initiative.endDate) * dayWidth;
+        const startX = dateToDayOffset(from.item.endDate) * dayWidth;
         const startY = barMidY(from);
-        const endX = dateToDayOffset(to.initiative.startDate) * dayWidth;
+        const endX = dateToDayOffset(to.item.startDate) * dayWidth;
         const endY = barMidY(to);
         let d: string;
         if (endX > startX + 10) {
