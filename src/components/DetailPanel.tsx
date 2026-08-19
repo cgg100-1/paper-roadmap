@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './detailPanel.css';
 import { STATUS_STYLES, newId } from '../data/theme';
 import type { Milestone, MilestoneType, PlanningItem, PlanningItemStatus } from '../domain/types';
 import { formatDateShort, snapDateToGrid, TIMELINE_END, TIMELINE_START } from '../data/timelineModel';
