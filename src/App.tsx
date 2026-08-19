@@ -204,8 +204,9 @@ export default function App() {
             {layout.items.map(({ initiative: ini, depth, height, barHeight }) => {
               const hasChildren = (childCount.get(ini.id) ?? 0) > 0;
               const isCollapsed = collapsedIds.includes(ini.id);
+              const hasVisibleChildren = hasChildren && !isCollapsed;
               return (
-                <div className={`initiative-row depth-${Math.min(depth, 3)}`} key={ini.id} style={{ height }}>
+                <div className={`initiative-row depth-${Math.min(depth, 3)}${hasVisibleChildren ? ' has-visible-children' : ''}`} key={ini.id} style={{ height }}>
                   <div className="row-label" style={{ width: LABEL_WIDTH, paddingLeft: 10 + depth * 17 }}>
                     <button
                       type="button"
