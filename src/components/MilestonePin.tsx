@@ -10,12 +10,13 @@ interface Props { milestone: Milestone; dayWidth: number; rowHeight: number; bar
 export function MilestonePin({ milestone, dayWidth, rowHeight }: Props) {
   const [showTip, setShowTip] = useState(false);
   const stickerSize = 20;
+  const edgeInset = 2;
   const color = MILESTONE_COLORS[milestone.type];
 
   const week = WEEK_SEGMENTS.find(segment => milestone.date >= segment.startDate && milestone.date < segment.endDate);
   const cellRight = dateToDayOffset(week?.endDate ?? milestone.date) * dayWidth;
-  const left = cellRight - stickerSize;
-  const top = 0;
+  const left = cellRight - stickerSize - edgeInset;
+  const top = edgeInset;
 
   return (
     <div
