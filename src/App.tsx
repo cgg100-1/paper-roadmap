@@ -7,7 +7,7 @@ import { DetailPanel } from './components/DetailPanel';
 import { MilestonePin } from './components/MilestonePin';
 import { WashiBar } from './components/WashiBar';
 import { PLANNER_CONFIG } from './config/plannerConfig';
-import { MONTH_BAND_COLORS } from './data/theme';
+import { MONTH_BAND_COLORS, PLANNER_VISUALS, barHeightForDepth, rowHeightForDepth } from './data/theme';
 import { buildHierarchyLayout, getDescendantIds } from './domain/hierarchy';
 import { movePlanningItem, type TimelineMoveMode } from './domain/timelineInteractions';
 import type { PlanningItem } from './domain/types';
@@ -15,12 +15,8 @@ import { MONTH_SEGMENTS, TIMELINE_DAYS, WEEK_SEGMENTS } from './data/timelineMod
 import { usePlannerStore } from './state/usePlannerStore';
 
 const DAY_WIDTH = PLANNER_CONFIG.weekWidth / 7;
-const HANDLE_W = 9;
 const LABEL_WIDTH = PLANNER_CONFIG.labelWidth;
 const TIMELINE_WIDTH = TIMELINE_DAYS * DAY_WIDTH;
-
-const rowHeightForDepth = (depth: number) => depth === 0 ? 78 : depth === 1 ? 54 : depth === 2 ? 38 : 30;
-const barHeightForDepth = (depth: number) => depth === 0 ? 34 : depth === 1 ? 24 : depth === 2 ? 14 : 8;
 
 type View = 'roadmap' | 'data';
 
@@ -47,7 +43,6 @@ export default function App() {
   );
 
   const update = (next: PlanningItem) => setItems(current => current.map(item => item.id === next.id ? next : item));
-
   const add = (item: PlanningItem) => setItems(current => [...current, item]);
 
   const remove = (id: string) => {
@@ -117,15 +112,7 @@ export default function App() {
 
       {view === 'data' ? (
         <main className="workspace data-workspace">
-          <DataEditor
-            items={items}
-            onUpdate={update}
-            onDelete={remove}
-            onAdd={add}
-            onImportJson={replaceFromJson}
-            onReset={resetToDemo}
-            exportJson={exportJson}
-          />
+          <DataEditor items={items} onUpdate={update} onDelete={remove} onAdd={add} onImportJson={replaceFromJson} onReset={resetToDemo} exportJson={exportJson} />
         </main>
       ) : (
         <main className="workspace">
@@ -152,13 +139,7 @@ export default function App() {
                 {WEEK_SEGMENTS.map(segment => <div key={segment.key} style={{ width: segment.days * DAY_WIDTH }} />)}
               </div>
 
-              <DependencyArrows
-                items={layout.items.map(({ item, top, height }) => ({ item, top, height }))}
-                dayWidth={DAY_WIDTH}
-                timelineDays={TIMELINE_DAYS}
-                totalHeight={layout.totalHeight}
-                offsetLeft={LABEL_WIDTH}
-              />
+              <DependencyArrows items={layout.items.map(({ item, top, height }) => ({ item, top, height }))} dayWidth={DAY_WIDTH} timelineDays={TIMELINE_DAYS} totalHeight={layout.totalHeight} offsetLeft={LABEL_WIDTH} />
 
               {layout.items.map(({ item, depth, height, barHeight }) => {
                 const hasChildren = (childCount.get(item.id) ?? 0) > 0;
@@ -166,13 +147,10 @@ export default function App() {
                 const hasVisibleChildren = hasChildren && !isCollapsed;
                 return (
                   <div className={`initiative-row depth-${Math.min(depth, 3)}${hasVisibleChildren ? ' has-visible-children' : ''}`} key={item.id} style={{ height }}>
-                    <div className="row-label" style={{ width: LABEL_WIDTH, paddingLeft: 10 + depth * 17 }}>
-                      <button
-                        type="button"
-                        className={`hierarchy-toggle ${hasChildren ? '' : 'empty'}`}
-                        onClick={e => { e.stopPropagation(); if (hasChildren) toggleCollapsed(item.id); }}
-                        aria-label={hasChildren ? (isCollapsed ? 'Expand children' : 'Collapse children') : undefined}
-                      >{hasChildren ? (isCollapsed ? '▸' : '▾') : '·'}</button>
+                    <div className="row-label" style={{ width: LABEL_WIDTH, paddingLeft: PLANNER_VISUALS.rowIndentBase + depth * PLANNER_VISUALS.rowIndentStep }}>
+                      <button type="button" className={`hierarchy-toggle ${hasChildren ? '' : 'empty'}`} onClick={e => { e.stopPropagation(); if (hasChildren) toggleCollapsed(item.id); }} aria-label={hasChildren ? (isCollapsed ? 'Expand children' : 'Collapse children') : undefined}>
+                        {hasChildren ? (isCollapsed ? '▸' : '▾') : '·'}
+                      </button>
                       <button className="row-label-main" onClick={e => { e.stopPropagation(); connectOrSelect(item.id); }}>
                         <span className="colour-chip" style={{ background: item.color }} />
                         <span><strong>{item.title}</strong><small>{item.team || (depth === 0 ? 'Initiative' : depth === 1 ? 'Sub-initiative' : depth === 2 ? 'Story' : 'Task')}</small></span>
@@ -187,13 +165,13 @@ export default function App() {
                         dayWidth={DAY_WIDTH}
                         rowHeight={height}
                         barHeight={barHeight}
-                        handleWidth={Math.min(HANDLE_W, Math.max(4, barHeight / 3))}
+                        handleWidth={Math.min(PLANNER_VISUALS.resizeHandleWidth, Math.max(4, barHeight / 3))}
                         onClick={e => { e.stopPropagation(); connectOrSelect(item.id); }}
                         onDragStart={e => beginPointerMove(e, item.id, 'drag')}
                         onResizeLeft={e => beginPointerMove(e, item.id, 'resize-left')}
                         onResizeRight={e => beginPointerMove(e, item.id, 'resize-right')}
                       />
-                      {item.milestones.map(m => <MilestonePin key={m.id} milestone={m} dayWidth={DAY_WIDTH} rowHeight={height} barHeight={barHeight} />)}
+                      {item.milestones.map(milestone => <MilestonePin key={milestone.id} milestone={milestone} dayWidth={DAY_WIDTH} />)}
                     </div>
                   </div>
                 );
