@@ -22,6 +22,7 @@ export interface Initiative {
   startDate: string;
   endDate: string;
   row: number;
+  parentId: string | null;
   dependencies: string[];
   milestones: Milestone[];
   status: InitiativeStatus;
@@ -126,6 +127,7 @@ export const INITIAL_TIMELINE_INITIATIVES: Initiative[] = LEGACY_INITIATIVES.map
   startDate: monthStart(initiative.startMonth),
   endDate: monthAfter(initiative.endMonth),
   row: initiative.row,
+  parentId: null,
   dependencies: [...initiative.dependencies],
   milestones: initiative.milestones.map(milestone => ({
     id: milestone.id,
