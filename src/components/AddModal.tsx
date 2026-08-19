@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Initiative, InitiativeStatus } from '../data/planningData';
-import { MONTHS, WASHI_PALETTE, newId } from '../data/planningData';
+import { TIMELINE_END, TIMELINE_START, WASHI_PALETTE, newId, snapDateToGrid } from '../data/planningData';
 
 interface Props {
   onAdd: (ini: Initiative) => void;
@@ -10,7 +10,7 @@ interface Props {
 
 export function AddModal({ onAdd, onClose, existingRows }: Props) {
   const [form, setForm] = useState({
-    title: '', team: '', owner: '', startMonth: 0, endMonth: 2,
+    title: '', team: '', owner: '', startDate: '2026-01-01', endDate: '2026-04-01',
     color: WASHI_PALETTE[0].bg, textColor: WASHI_PALETTE[0].text,
     status: 'planning' as InitiativeStatus, description: '',
   });
@@ -18,7 +18,10 @@ export function AddModal({ onAdd, onClose, existingRows }: Props) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) return;
-    onAdd({ id: newId(), ...form, row: existingRows, dependencies: [], milestones: [] });
+    const startDate = snapDateToGrid(form.startDate);
+    const endDate = snapDateToGrid(form.endDate);
+    if (endDate <= startDate) return;
+    onAdd({ id: newId(), ...form, startDate, endDate, row: existingRows, dependencies: [], milestones: [] });
   };
 
   return (
@@ -31,9 +34,10 @@ export function AddModal({ onAdd, onClose, existingRows }: Props) {
           <label>Owner<input value={form.owner} onChange={e => setForm(v => ({ ...v, owner: e.target.value }))} /></label>
         </div>
         <div className="two-col">
-          <label>Start<select value={form.startMonth} onChange={e => { const startMonth = Number(e.target.value); setForm(v => ({ ...v, startMonth, endMonth: Math.max(v.endMonth, startMonth + 1) })); }}>{MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}</select></label>
-          <label>End<select value={form.endMonth} onChange={e => setForm(v => ({ ...v, endMonth: Number(e.target.value) }))}>{MONTHS.map((m, i) => <option key={m} value={i} disabled={i <= form.startMonth}>{m}</option>)}</select></label>
+          <label>Start<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={form.startDate} onChange={e => setForm(v => ({ ...v, startDate: e.target.value }))} /></label>
+          <label>End<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={form.endDate} onChange={e => setForm(v => ({ ...v, endDate: e.target.value }))} /></label>
         </div>
+        <small className="date-hint">Dates snap to the nearest Monday or month boundary.</small>
         <label>Colour<div className="palette">{WASHI_PALETTE.map(p => <button key={p.bg} type="button" className={form.color === p.bg ? 'swatch selected' : 'swatch'} style={{ background: p.bg }} onClick={() => setForm(v => ({ ...v, color: p.bg, textColor: p.text }))} />)}</div></label>
         <label>Description<textarea value={form.description} onChange={e => setForm(v => ({ ...v, description: e.target.value }))} /></label>
         <div className="actions"><button type="submit" className="primary">Add to planner</button><button type="button" onClick={onClose}>Cancel</button></div>
