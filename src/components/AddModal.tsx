@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { WASHI_PALETTE, newId } from '../data/theme';
 import type { PlanningItem, PlanningItemStatus } from '../domain/types';
-import { TIMELINE_END, TIMELINE_START, snapDateToGrid } from '../data/timelineModel';
+import { TIMELINE_END, TIMELINE_START, addDays, snapDateToGrid } from '../data/timelineModel';
 
 interface Props {
   onAdd: (item: PlanningItem) => void;
@@ -12,7 +12,7 @@ interface Props {
 
 export function AddModal({ onAdd, onClose, existingRows, items }: Props) {
   const [form, setForm] = useState({
-    title: '', team: '', owner: '', startDate: TIMELINE_START, endDate: '2026-04-01', parentId: '' as string,
+    title: '', team: '', owner: '', startDate: TIMELINE_START, endDate: addDays(TIMELINE_START, 90), parentId: '' as string,
     color: WASHI_PALETTE[0].bg, textColor: WASHI_PALETTE[0].text,
     status: 'planning' as PlanningItemStatus, description: '',
   });
