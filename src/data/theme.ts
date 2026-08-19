@@ -5,6 +5,11 @@ export const MONTH_BAND_COLORS = [
   '#F5E3ED', '#E3F0E8', '#E6EAF5', '#F5E9DC', '#DCF0F5', '#F2EDD8',
 ];
 
+export const DATA_RAINBOW_COLORS = [
+  '#ED7D76', '#F0A06D', '#EFC56B', '#D5D66F', '#A9CF8B', '#77C6AD',
+  '#79BFC8', '#83AECA', '#9B9FD0', '#BA96C9', '#D790B3', '#DF8A92',
+];
+
 export const WASHI_PALETTE: Array<{ bg: string; text: string }> = [
   { bg: '#B8D4B8', text: '#1A3A1A' }, { bg: '#E8A8B4', text: '#5A1C26' },
   { bg: '#A8BEE0', text: '#182A52' }, { bg: '#E8B090', text: '#5A260E' },
@@ -23,5 +28,18 @@ export const STATUS_STYLES: Record<PlanningItemStatus, { bg: string; text: strin
   complete: { bg: '#ECEAE6', text: '#4A3A2A', label: 'Complete' },
   blocked: { bg: '#F5E6EB', text: '#5A1C26', label: 'Blocked' },
 };
+
+export const PLANNER_VISUALS = {
+  rowHeights: [78, 54, 38, 30] as const,
+  barHeights: [34, 24, 14, 8] as const,
+  resizeHandleWidth: 9,
+  rowIndentBase: 10,
+  rowIndentStep: 17,
+  milestoneStickerSize: 20,
+  milestoneEdgeInset: 2,
+} as const;
+
+export const rowHeightForDepth = (depth: number) => PLANNER_VISUALS.rowHeights[Math.min(depth, PLANNER_VISUALS.rowHeights.length - 1)];
+export const barHeightForDepth = (depth: number) => PLANNER_VISUALS.barHeights[Math.min(depth, PLANNER_VISUALS.barHeights.length - 1)];
 
 export const newId = () => Math.random().toString(36).slice(2, 9);
