@@ -25,25 +25,39 @@ export function WashiBar({ initiative, isSelected, isConnecting, connectingFrom,
 
   return (
     <div className="absolute" style={{ left, top, width, height: barHeight, zIndex: 4 }}>
-      <div style={{ position: 'absolute', left: 0, top: 0, width: handleWidth, height: '100%', cursor: 'ew-resize', zIndex: 6, borderRadius: '4px 0 0 4px' }} onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); onResizeLeft(e); }} />
+      <div
+        style={{ position: 'absolute', left: 0, top: 0, width: handleWidth, height: '100%', cursor: 'ew-resize', zIndex: 6 }}
+        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); onResizeLeft(e); }}
+      />
+
       <div
         className="washi-bar"
         style={{
-          position: 'absolute', inset: 0, borderRadius: 4,
+          position: 'absolute', inset: 0,
           backgroundColor: initiative.color,
-          backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 4px, rgba(255,255,255,0.14) 4px, rgba(255,255,255,0.14) 5px)',
-          boxShadow: isSelected ? `0 0 0 2px ${initiative.textColor}, 0 2px 10px rgba(0,0,0,0.15)` : isSource ? '0 0 0 2px #B43C3C' : '0 1px 4px rgba(0,0,0,0.10)',
+          opacity: 0.88,
+          clipPath: 'polygon(0.7% 0%, 0% 9%, 0.8% 18%, 0.15% 31%, 0.9% 43%, 0.2% 55%, 0.75% 68%, 0.1% 81%, 0.9% 92%, 0.35% 100%, 99.35% 100%, 100% 91%, 99.25% 80%, 99.9% 68%, 99.2% 55%, 99.85% 42%, 99.15% 30%, 99.85% 18%, 99.2% 8%, 99.6% 0%)',
+          backgroundImage: [
+            'linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01) 24%, rgba(255,255,255,0.06) 57%, rgba(0,0,0,0.025))',
+            'repeating-linear-gradient(7deg, rgba(255,255,255,0.10) 0, rgba(255,255,255,0.10) 1px, transparent 1px, transparent 5px)',
+            'repeating-linear-gradient(96deg, rgba(0,0,0,0.018) 0, rgba(0,0,0,0.018) 1px, transparent 1px, transparent 7px)',
+          ].join(','),
+          boxShadow: isSelected ? `0 0 0 2px ${initiative.textColor}, 0 3px 8px rgba(44,36,24,0.14)` : isSource ? '0 0 0 2px #B43C3C' : '0 2px 4px rgba(44,36,24,0.10)',
           outline: isTarget ? '2px dashed rgba(44,36,24,0.4)' : 'none', outlineOffset: 2,
           cursor: isConnecting ? (isTarget ? 'crosshair' : 'default') : 'grab',
-          display: 'flex', alignItems: 'center', paddingLeft: handleWidth + 4, paddingRight: handleWidth + 4,
-          overflow: 'hidden', transition: 'outline 0.1s',
+          display: 'flex', alignItems: 'center', paddingLeft: handleWidth + 5, paddingRight: handleWidth + 5,
+          overflow: 'hidden', transition: 'outline 0.1s, box-shadow 0.15s ease, transform 0.12s ease',
         }}
         onClick={onClick}
         onMouseDown={(e) => { if (!isConnecting) onDragStart(e); }}
       >
-        <span style={{ fontSize: 11.5, fontWeight: 500, fontFamily: '"DM Sans", sans-serif', color: initiative.textColor, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none', userSelect: 'none' }}>{initiative.title}</span>
+        <span style={{ fontSize: 11.5, fontWeight: 500, fontFamily: '"DM Sans", sans-serif', color: initiative.textColor, letterSpacing: '0.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none', userSelect: 'none', textShadow: '0 1px rgba(255,255,255,0.22)' }}>{initiative.title}</span>
       </div>
-      <div style={{ position: 'absolute', right: 0, top: 0, width: handleWidth, height: '100%', cursor: 'ew-resize', zIndex: 6, borderRadius: '0 4px 4px 0' }} onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); onResizeRight(e); }} />
+
+      <div
+        style={{ position: 'absolute', right: 0, top: 0, width: handleWidth, height: '100%', cursor: 'ew-resize', zIndex: 6 }}
+        onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); onResizeRight(e); }}
+      />
     </div>
   );
 }
