@@ -31,7 +31,7 @@ export interface Initiative {
 }
 
 export const TIMELINE_START = `${YEAR}-01-01`;
-export const TIMELINE_END = `${YEAR + 1}-01-01`;
+export const TIMELINE_END = `${YEAR + 1}-04-01`;
 const DAY_MS = 86_400_000;
 
 const toUtcMs = (value: string) => {
@@ -53,10 +53,18 @@ const clampTimelineDate = (date: string) => {
 
 const isMonday = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay() === 1;
 
+const nextMonth = (date: string) => {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + 1, 1);
+  return d.toISOString().slice(0, 10);
+};
+
 const SNAP_POINTS = (() => {
   const candidates = new Set<string>([TIMELINE_START, TIMELINE_END]);
-  for (let month = 0; month < 12; month += 1) {
-    candidates.add(`${YEAR}-${String(month + 1).padStart(2, '0')}-01`);
+  let monthCursor = TIMELINE_START;
+  while (monthCursor < TIMELINE_END) {
+    candidates.add(monthCursor);
+    monthCursor = nextMonth(monthCursor);
   }
   for (let day = 0; day <= TIMELINE_DAYS; day += 1) {
     const candidate = addDays(TIMELINE_START, day);
@@ -81,11 +89,44 @@ export interface TimelineSegment {
   monthIndex?: number;
 }
 
-export const MONTH_SEGMENTS: TimelineSegment[] = MONTHS.map((label, monthIndex) => {
-  const startDate = `${YEAR}-${String(monthIndex + 1).padStart(2, '0')}-01`;
-  const endDate = monthIndex === 11 ? TIMELINE_END : `${YEAR}-${String(monthIndex + 2).padStart(2, '0')}-01`;
-  return { key: `month-${monthIndex}`, label, startDate, endDate, days: daysBetween(startDate, endDate), monthIndex };
-});
+export const MONTH_SEGMENTS: TimelineSegment[] = (() => {
+  const segments: TimelineSegment[] = [];
+  let cursor = TIMELINE_START;
+  while (cursor < TIMELINE_END) {
+    const d = new Date(`${cursor}T00:00:00Z`);
+    const monthIndex = d.getUTCMonth();
+    const endDate = nextMonth(cursor) > TIMELINE_END ? TIMELINE_END : nextMonth(cursor);
+    segments.push({
+      key: `month-${cursor}`,
+      label: MONTHS[monthIndex],
+      startDate: cursor,
+      endDate,
+      days: daysBetween(cursor, endDate),
+      monthIndex,
+    });
+    cursor = endDate;
+  }
+  return segments;
+})();
+
+export const YEAR_SEGMENTS: TimelineSegment[] = (() => {
+  const segments: TimelineSegment[] = [];
+  let cursor = TIMELINE_START;
+  while (cursor < TIMELINE_END) {
+    const year = new Date(`${cursor}T00:00:00Z`).getUTCFullYear();
+    const nextYear = `${year + 1}-01-01`;
+    const endDate = nextYear < TIMELINE_END ? nextYear : TIMELINE_END;
+    segments.push({
+      key: `year-${year}`,
+      label: String(year),
+      startDate: cursor,
+      endDate,
+      days: daysBetween(cursor, endDate),
+    });
+    cursor = endDate;
+  }
+  return segments;
+})();
 
 const isoWeek = (date: string) => {
   const d = new Date(`${date}T00:00:00Z`);
@@ -115,7 +156,7 @@ export const formatDateShort = (date: string) => new Intl.DateTimeFormat('en-GB'
 }).format(new Date(`${date}T00:00:00Z`));
 
 const monthStart = (month: number) => `${YEAR}-${String(month + 1).padStart(2, '0')}-01`;
-const monthAfter = (month: number) => month === 11 ? TIMELINE_END : `${YEAR}-${String(month + 2).padStart(2, '0')}-01`;
+const monthAfter = (month: number) => month === 11 ? `${YEAR + 1}-01-01` : `${YEAR}-${String(month + 2).padStart(2, '0')}-01`;
 const monthMiddle = (month: number) => `${YEAR}-${String(month + 1).padStart(2, '0')}-15`;
 
 export const INITIAL_TIMELINE_INITIATIVES: Initiative[] = LEGACY_INITIATIVES.map(initiative => ({
