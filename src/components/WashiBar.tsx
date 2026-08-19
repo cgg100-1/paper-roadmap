@@ -1,5 +1,5 @@
-import type { Initiative } from '../data/planningData';
-import { dateToDayOffset, daysBetween } from '../data/planningData';
+import type { Initiative } from '../data/timelineModel';
+import { dateToDayOffset, daysBetween } from '../data/timelineModel';
 
 interface Props {
   initiative: Initiative;
