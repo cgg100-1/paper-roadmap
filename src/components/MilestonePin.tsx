@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import type { Milestone } from '../data/planningData';
-import { dateToDayOffset, formatDateShort, MILESTONE_COLORS } from '../data/planningData';
+import { MILESTONE_COLORS } from '../data/planningData';
+import type { Milestone } from '../data/timelineModel';
+import { dateToDayOffset, formatDateShort } from '../data/timelineModel';
 
 const TYPE_LABELS: Record<string, string> = { deadline: 'Deadline', launch: 'Launch', review: 'Review', release: 'Release' };
 
