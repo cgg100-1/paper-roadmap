@@ -95,10 +95,11 @@ export const MONTH_SEGMENTS: TimelineSegment[] = (() => {
   while (cursor < TIMELINE_END) {
     const d = new Date(`${cursor}T00:00:00Z`);
     const monthIndex = d.getUTCMonth();
+    const year = d.getUTCFullYear();
     const endDate = nextMonth(cursor) > TIMELINE_END ? TIMELINE_END : nextMonth(cursor);
     segments.push({
       key: `month-${cursor}`,
-      label: MONTHS[monthIndex],
+      label: monthIndex === 0 ? `${MONTHS[monthIndex]} ${year}` : MONTHS[monthIndex],
       startDate: cursor,
       endDate,
       days: daysBetween(cursor, endDate),
