@@ -4,16 +4,30 @@ import { DependencyArrows } from './components/DependencyArrows';
 import { DetailPanel } from './components/DetailPanel';
 import { MilestonePin } from './components/MilestonePin';
 import { WashiBar } from './components/WashiBar';
-import { INITIAL_INITIATIVES, MONTHS, MONTH_BAND_COLORS, type Initiative } from './data/planningData';
+import { MONTH_BAND_COLORS } from './data/planningData';
+import {
+  addDays,
+  daysBetween,
+  INITIAL_TIMELINE_INITIATIVES,
+  MONTH_SEGMENTS,
+  snapDateToGrid,
+  TIMELINE_DAYS,
+  TIMELINE_END,
+  TIMELINE_START,
+  WEEK_SEGMENTS,
+  type Initiative,
+} from './data/timelineModel';
 
-const MONTH_WIDTH = 146;
+const WEEK_WIDTH = 35;
+const DAY_WIDTH = WEEK_WIDTH / 7;
 const ROW_HEIGHT = 78;
 const BAR_HEIGHT = 34;
 const HANDLE_W = 9;
 const LABEL_WIDTH = 220;
+const TIMELINE_WIDTH = TIMELINE_DAYS * DAY_WIDTH;
 
 export default function App() {
-  const [initiatives, setInitiatives] = useState<Initiative[]>(INITIAL_INITIATIVES);
+  const [initiatives, setInitiatives] = useState<Initiative[]>(INITIAL_TIMELINE_INITIATIVES);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [connectingFrom, setConnectingFrom] = useState<string | null>(null);
@@ -43,18 +57,32 @@ export default function App() {
     if (!initial) return;
 
     const move = (ev: MouseEvent) => {
-      const deltaMonths = Math.round((ev.clientX - startX) / MONTH_WIDTH);
+      const deltaDays = Math.round((ev.clientX - startX) / DAY_WIDTH);
       setInitiatives(items => items.map(i => {
         if (i.id !== id) return i;
+
         if (mode === 'drag') {
-          const duration = initial.endMonth - initial.startMonth;
-          const startMonth = Math.max(0, Math.min(11 - duration, initial.startMonth + deltaMonths));
-          return { ...i, startMonth, endMonth: startMonth + duration };
+          const duration = daysBetween(initial.startDate, initial.endDate);
+          const latestStart = addDays(TIMELINE_END, -duration);
+          let target = addDays(initial.startDate, deltaDays);
+          if (target < TIMELINE_START) target = TIMELINE_START;
+          if (target > latestStart) target = latestStart;
+          let startDate = snapDateToGrid(target);
+          if (startDate > latestStart) startDate = latestStart;
+          return { ...i, startDate, endDate: addDays(startDate, duration) };
         }
+
         if (mode === 'resize-left') {
-          return { ...i, startMonth: Math.max(0, Math.min(initial.endMonth - 1, initial.startMonth + deltaMonths)) };
+          let startDate = snapDateToGrid(addDays(initial.startDate, deltaDays));
+          if (startDate < TIMELINE_START) startDate = TIMELINE_START;
+          if (startDate >= initial.endDate) return i;
+          return { ...i, startDate };
         }
-        return { ...i, endMonth: Math.min(11, Math.max(initial.startMonth + 1, initial.endMonth + deltaMonths)) };
+
+        let endDate = snapDateToGrid(addDays(initial.endDate, deltaDays));
+        if (endDate > TIMELINE_END) endDate = TIMELINE_END;
+        if (endDate <= initial.startDate) return i;
+        return { ...i, endDate };
       }));
     };
 
@@ -70,7 +98,7 @@ export default function App() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <div className="kicker">12-month planning</div>
+          <div className="kicker">12-month planning · weekly snap</div>
           <h1>Paper Roadmap</h1>
         </div>
         <div className="top-actions">
@@ -81,17 +109,29 @@ export default function App() {
 
       <main className="workspace">
         <div className="planner-scroll planner" onClick={() => { setSelectedId(null); if (connectingFrom) setConnectingFrom(null); }}>
-          <div className="month-header" style={{ width: LABEL_WIDTH + 12 * MONTH_WIDTH }}>
+          <div className="month-header" style={{ width: LABEL_WIDTH + TIMELINE_WIDTH }}>
             <div className="corner" style={{ width: LABEL_WIDTH }}>Initiative</div>
-            {MONTHS.map((month, i) => <div className="month" key={month} style={{ width: MONTH_WIDTH, background: MONTH_BAND_COLORS[i] }}>{month}</div>)}
+            <div className="timeline-head" style={{ width: TIMELINE_WIDTH }}>
+              <div className="month-row">
+                {MONTH_SEGMENTS.map(segment => (
+                  <div className="month" key={segment.key} style={{ width: segment.days * DAY_WIDTH, background: MONTH_BAND_COLORS[segment.monthIndex ?? 0] }}>{segment.label}</div>
+                ))}
+              </div>
+              <div className="week-row">
+                {WEEK_SEGMENTS.map(segment => <div className="week" key={segment.key} style={{ width: segment.days * DAY_WIDTH }}>{segment.label}</div>)}
+              </div>
+            </div>
           </div>
 
-          <div className="rows" style={{ width: LABEL_WIDTH + 12 * MONTH_WIDTH }}>
+          <div className="rows" style={{ width: LABEL_WIDTH + TIMELINE_WIDTH }}>
             <div className="month-columns" style={{ left: LABEL_WIDTH }}>
-              {MONTHS.map((m, i) => <div key={m} style={{ width: MONTH_WIDTH, background: MONTH_BAND_COLORS[i] }} />)}
+              {MONTH_SEGMENTS.map(segment => <div key={segment.key} style={{ width: segment.days * DAY_WIDTH, background: MONTH_BAND_COLORS[segment.monthIndex ?? 0] }} />)}
+            </div>
+            <div className="week-columns" style={{ left: LABEL_WIDTH }}>
+              {WEEK_SEGMENTS.map(segment => <div key={segment.key} style={{ width: segment.days * DAY_WIDTH }} />)}
             </div>
 
-            <DependencyArrows initiatives={sorted} monthWidth={MONTH_WIDTH} rowHeight={ROW_HEIGHT} barHeight={BAR_HEIGHT} offsetLeft={LABEL_WIDTH} />
+            <DependencyArrows initiatives={sorted} dayWidth={DAY_WIDTH} timelineDays={TIMELINE_DAYS} rowHeight={ROW_HEIGHT} offsetLeft={LABEL_WIDTH} />
 
             {sorted.map(ini => (
               <div className="initiative-row" key={ini.id} style={{ height: ROW_HEIGHT }}>
@@ -99,13 +139,13 @@ export default function App() {
                   <span className="colour-chip" style={{ background: ini.color }} />
                   <span><strong>{ini.title}</strong><small>{ini.team}</small></span>
                 </button>
-                <div className="bar-area" style={{ width: 12 * MONTH_WIDTH, height: ROW_HEIGHT }} onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}>
+                <div className="bar-area" style={{ width: TIMELINE_WIDTH, height: ROW_HEIGHT }} onClick={e => { e.stopPropagation(); connectOrSelect(ini.id); }}>
                   <WashiBar
                     initiative={ini}
                     isSelected={selectedId === ini.id}
                     isConnecting={connectingFrom !== null}
                     connectingFrom={connectingFrom}
-                    monthWidth={MONTH_WIDTH}
+                    dayWidth={DAY_WIDTH}
                     rowHeight={ROW_HEIGHT}
                     barHeight={BAR_HEIGHT}
                     handleWidth={HANDLE_W}
@@ -114,7 +154,7 @@ export default function App() {
                     onResizeLeft={e => beginPointerMove(e, ini.id, 'resize-left')}
                     onResizeRight={e => beginPointerMove(e, ini.id, 'resize-right')}
                   />
-                  {ini.milestones.map(m => <MilestonePin key={m.id} milestone={m} monthWidth={MONTH_WIDTH} rowHeight={ROW_HEIGHT} barHeight={BAR_HEIGHT} />)}
+                  {ini.milestones.map(m => <MilestonePin key={m.id} milestone={m} dayWidth={DAY_WIDTH} rowHeight={ROW_HEIGHT} barHeight={BAR_HEIGHT} />)}
                 </div>
               </div>
             ))}
