@@ -31,6 +31,7 @@ button.primary { background:#2c2418; color:#f7f3ed; border-color:#2c2418; }
 .week-columns { z-index:1; }
 .week-columns > div { height:100%; border-left:1px solid rgba(44,36,24,.065); background:transparent; }
 .initiative-row { display:flex; position:relative; border-bottom:1px solid rgba(44,36,24,.06); }
+.initiative-row.has-visible-children { border-bottom-color:transparent; }
 .initiative-row.depth-0 { border-top:1px solid rgba(44,36,24,.055); }
 .initiative-row.depth-1 { background:rgba(255,255,255,.06); }
 .initiative-row.depth-2,.initiative-row.depth-3 { background:rgba(255,255,255,.11); }
