@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import './dataEditor.css';
 import { AddModal } from './components/AddModal';
 import { DataEditor } from './components/DataEditor';
 import { DependencyArrows } from './components/DependencyArrows';
