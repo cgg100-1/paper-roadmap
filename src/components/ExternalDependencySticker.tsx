@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import './externalDependencySticker.css';
 import { PLANNER_VISUALS } from '../data/theme';
 import type { ExternalDependency } from '../domain/types';
 import { WEEK_SEGMENTS, dateToDayOffset, formatDateShort } from '../data/timelineModel';
