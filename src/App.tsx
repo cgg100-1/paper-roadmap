@@ -4,6 +4,7 @@ import { AddModal } from './components/AddModal';
 import { DataEditor } from './components/DataEditor';
 import { DependencyArrows } from './components/DependencyArrows';
 import { DetailPanel } from './components/DetailPanel';
+import { ExternalDependencySticker } from './components/ExternalDependencySticker';
 import { MilestonePin } from './components/MilestonePin';
 import { WashiBar } from './components/WashiBar';
 import { PLANNER_CONFIG } from './config/plannerConfig';
@@ -157,6 +158,7 @@ export default function App() {
                       </button>
                     </div>
                     <div className="bar-area" style={{ width: TIMELINE_WIDTH, height }} onClick={e => { e.stopPropagation(); connectOrSelect(item.id); }}>
+                      {item.externalDependencies.map(dependency => <ExternalDependencySticker key={dependency.id} dependency={dependency} dayWidth={DAY_WIDTH} rowHeight={height} />)}
                       <WashiBar
                         item={item}
                         isSelected={selectedId === item.id}
