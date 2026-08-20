@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useState } from 'react';
+import './milestonePin.css';
 import { MILESTONE_COLORS, PLANNER_VISUALS } from '../data/theme';
 import type { Milestone } from '../domain/types';
 import { WEEK_SEGMENTS, dateToDayOffset, formatDateShort } from '../data/timelineModel';
