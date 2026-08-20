@@ -32,7 +32,9 @@ export const PLANNER_VISUALS = {
   rowIndentStep: 17,
   milestoneStickerSize: 20,
   milestoneEdgeInset: 2,
-  externalDependencyStickerSize: 28,
+  externalDependencyStickerWidth: 32,
+  externalDependencyStickerHeight: 23,
+  externalDependencyTopInset: 7,
 } as const;
 
 export const rowHeightForDepth = (depth: number) => PLANNER_VISUALS.rowHeights[Math.min(depth, PLANNER_VISUALS.rowHeights.length - 1)];
