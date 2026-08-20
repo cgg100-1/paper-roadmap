@@ -5,7 +5,7 @@ import type { PlanningItem } from './types';
 const base: PlanningItem = {
   id: 'item', title: 'Item', team: '', color: '#fff', textColor: '#000',
   startDate: '2026-02-02', endDate: '2026-03-02', row: 0, parentId: null,
-  dependencies: [], milestones: [], status: 'planning', description: '', owner: '',
+  dependencies: [], externalDependencies: [], milestones: [], status: 'planning', description: '', owner: '',
 };
 
 describe('timeline interactions', () => {
