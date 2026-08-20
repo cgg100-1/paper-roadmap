@@ -1,4 +1,4 @@
-import type { Milestone, MilestoneType, PlanningItem, PlanningItemStatus } from './types';
+import type { ExternalDependency, Milestone, MilestoneType, PlanningItem, PlanningItemStatus } from './types';
 
 export const PLANNER_STORAGE_KEY = 'paper-roadmap:v1';
 export const PLANNER_DOCUMENT_VERSION = 1 as const;
@@ -21,9 +21,19 @@ const isMilestone = (value: unknown): value is Milestone => {
     && MILESTONE_TYPES.includes(milestone.type as MilestoneType);
 };
 
-const isPlanningItem = (value: unknown): value is PlanningItem => {
+const isExternalDependency = (value: unknown): value is ExternalDependency => {
   if (!value || typeof value !== 'object') return false;
-  const item = value as Partial<PlanningItem>;
+  const dependency = value as Partial<ExternalDependency>;
+  return isString(dependency.id)
+    && isString(dependency.title)
+    && isString(dependency.date);
+};
+
+type PersistedPlanningItem = Omit<PlanningItem, 'externalDependencies'> & { externalDependencies?: ExternalDependency[] };
+
+const isPlanningItem = (value: unknown): value is PersistedPlanningItem => {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Partial<PersistedPlanningItem>;
   return isString(item.id)
     && isString(item.title)
     && isString(item.team)
@@ -34,6 +44,7 @@ const isPlanningItem = (value: unknown): value is PlanningItem => {
     && typeof item.row === 'number'
     && (item.parentId === null || isString(item.parentId))
     && Array.isArray(item.dependencies) && item.dependencies.every(isString)
+    && (item.externalDependencies === undefined || (Array.isArray(item.externalDependencies) && item.externalDependencies.every(isExternalDependency)))
     && Array.isArray(item.milestones) && item.milestones.every(isMilestone)
     && STATUSES.includes(item.status as PlanningItemStatus)
     && isString(item.description)
@@ -64,6 +75,8 @@ export function parsePlannerJson(text: string): PlanningItem[] {
     ...item,
     row,
     dependencies: item.dependencies.filter(id => ids.has(id) && id !== item.id),
+    externalDependencies: (item.externalDependencies ?? []).map(dependency => ({ ...dependency })),
+    milestones: item.milestones.map(milestone => ({ ...milestone })),
     parentId: item.parentId && ids.has(item.parentId) && item.parentId !== item.id ? item.parentId : null,
   }));
 }
