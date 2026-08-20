@@ -8,6 +8,12 @@ export interface Milestone {
   type: MilestoneType;
 }
 
+export interface ExternalDependency {
+  id: string;
+  title: string;
+  date: string;
+}
+
 export interface PlanningItem {
   id: string;
   title: string;
@@ -19,6 +25,7 @@ export interface PlanningItem {
   row: number;
   parentId: string | null;
   dependencies: string[];
+  externalDependencies: ExternalDependency[];
   milestones: Milestone[];
   status: PlanningItemStatus;
   description: string;
