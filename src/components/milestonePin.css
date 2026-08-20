@@ -1,0 +1,16 @@
+.milestone-pin {
+  z-index:3;
+}
+
+.milestone-pin:hover {
+  z-index:9;
+}
+
+.milestone-sticker {
+  background-image:
+    linear-gradient(135deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.08) 16%, transparent 32%),
+    linear-gradient(315deg, rgba(44,36,24,.08) 0%, transparent 22%),
+    repeating-linear-gradient(16deg, rgba(255,255,255,.07) 0 1px, transparent 1px 4px);
+  opacity:.92;
+  filter:drop-shadow(0 1px 1.5px rgba(44,36,24,.16));
+}
