@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './detailPanel.css';
 import { STATUS_STYLES, newId } from '../data/theme';
-import type { Milestone, MilestoneType, PlanningItem, PlanningItemStatus } from '../domain/types';
+import type { ExternalDependency, Milestone, MilestoneType, PlanningItem, PlanningItemStatus } from '../domain/types';
 import { formatDateShort, snapDateToGrid, TIMELINE_END, TIMELINE_START } from '../data/timelineModel';
 
 interface Props {
@@ -18,7 +18,9 @@ const MILESTONE_TYPES: MilestoneType[] = ['deadline', 'launch', 'review', 'relea
 
 export function DetailPanel({ item, items, onClose, onUpdate, onDelete, onStartConnect }: Props) {
   const [addingMilestone, setAddingMilestone] = useState(false);
+  const [addingExternalDependency, setAddingExternalDependency] = useState(false);
   const [draftMilestone, setDraftMilestone] = useState<Omit<Milestone, 'id'>>({ title: '', date: item.startDate, type: 'deadline' });
+  const [draftExternalDependency, setDraftExternalDependency] = useState<Omit<ExternalDependency, 'id'>>({ title: '', date: item.startDate });
 
   const patch = (next: Partial<PlanningItem>) => onUpdate({ ...item, ...next });
   const dependencyNames = item.dependencies.map(id => items.find(candidate => candidate.id === id)?.title).filter(Boolean);
@@ -33,9 +35,19 @@ export function DetailPanel({ item, items, onClose, onUpdate, onDelete, onStartC
     if (endDate > item.startDate) patch({ endDate });
   };
 
+  const updateExternalDependency = (id: string, next: Partial<ExternalDependency>) => patch({
+    externalDependencies: item.externalDependencies.map(dependency => dependency.id === id ? { ...dependency, ...next } : dependency),
+  });
+  const removeExternalDependency = (id: string) => patch({ externalDependencies: item.externalDependencies.filter(dependency => dependency.id !== id) });
+  const addExternalDependency = () => {
+    if (!draftExternalDependency.title.trim()) return;
+    patch({ externalDependencies: [...item.externalDependencies, { id: newId(), title: draftExternalDependency.title.trim(), date: draftExternalDependency.date }] });
+    setDraftExternalDependency({ title: '', date: item.startDate });
+    setAddingExternalDependency(false);
+  };
+
   const updateMilestone = (id: string, next: Partial<Milestone>) => patch({ milestones: item.milestones.map(m => m.id === id ? { ...m, ...next } : m) });
   const removeMilestone = (id: string) => patch({ milestones: item.milestones.filter(m => m.id !== id) });
-
   const addMilestone = () => {
     if (!draftMilestone.title.trim()) return;
     patch({ milestones: [...item.milestones, { id: newId(), title: draftMilestone.title.trim(), date: draftMilestone.date, type: draftMilestone.type }] });
@@ -77,6 +89,34 @@ export function DetailPanel({ item, items, onClose, onUpdate, onDelete, onStartC
           <span className="eyebrow">Dependencies</span>
           <div className="dependency-list">{dependencyNames.length ? dependencyNames.join(' · ') : 'None'}</div>
           <button onClick={() => onStartConnect(item.id)}>Add dependency</button>
+        </section>
+
+        <section>
+          <div className="panel-section-head">
+            <span className="eyebrow">External dependencies</span>
+            <button type="button" onClick={() => setAddingExternalDependency(value => !value)}>{addingExternalDependency ? 'Cancel' : '+ Add sticker'}</button>
+          </div>
+          <small className="date-hint">A paper sticker marks the week when something outside this roadmap must arrive.</small>
+
+          {addingExternalDependency && (
+            <div className="external-dependency-editor-card">
+              <label>What are you waiting for?<input value={draftExternalDependency.title} onChange={e => setDraftExternalDependency(value => ({ ...value, title: e.target.value }))} placeholder="e.g. Brand assets from agency" /></label>
+              <label>Date<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={draftExternalDependency.date} onChange={e => setDraftExternalDependency(value => ({ ...value, date: e.target.value }))} /></label>
+              <button type="button" className="primary" onClick={addExternalDependency}>Add external dependency</button>
+            </div>
+          )}
+
+          {item.externalDependencies.length === 0 && <div className="dependency-list">None</div>}
+          {item.externalDependencies.map(dependency => (
+            <div key={dependency.id} className="external-dependency-editor-row">
+              <input aria-label="External dependency title" value={dependency.title} onChange={e => updateExternalDependency(dependency.id, { title: e.target.value })} />
+              <label>Date<input type="date" min={TIMELINE_START} max={TIMELINE_END} value={dependency.date} onChange={e => updateExternalDependency(dependency.id, { date: e.target.value })} /></label>
+              <div className="external-dependency-editor-footer">
+                <span className="milestone-row">{formatDateShort(dependency.date)}</span>
+                <button type="button" className="danger" onClick={() => removeExternalDependency(dependency.id)}>Delete sticker</button>
+              </div>
+            </div>
+          ))}
         </section>
 
         <section>
