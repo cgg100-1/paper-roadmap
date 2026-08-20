@@ -1,6 +1,8 @@
 import type { PlanningItem } from '../domain/types';
 
-export const DEMO_PLANNING_ITEMS: PlanningItem[] = [
+type DemoItemSeed = Omit<PlanningItem, 'externalDependencies'>;
+
+const DEMO_PLANNING_ITEMS_BASE: DemoItemSeed[] = [
   { id: 'i1', title: 'Platform Observability', team: 'Platform', color: '#B8D4B8', textColor: '#1A3A1A', startDate: '2026-01-01', endDate: '2026-05-01', row: 0, parentId: null, dependencies: [], milestones: [{ id: 'm1a', title: 'Metrics baseline', date: '2026-02-15', type: 'review' }, { id: 'm1b', title: 'Full rollout', date: '2026-04-15', type: 'launch' }], status: 'active', description: 'Unified observability stack: traces, metrics, and logs across all services. Replacing fragmented tooling with a cohesive platform built on OpenTelemetry.', owner: 'Priya Agarwal' },
   { id: 'i2', title: 'Auth & Identity Overhaul', team: 'Security', color: '#E8A8B4', textColor: '#5A1C26', startDate: '2026-02-01', endDate: '2026-06-01', row: 1, parentId: null, dependencies: ['i1'], milestones: [{ id: 'm2a', title: 'SSO MVP', date: '2026-03-15', type: 'deadline' }, { id: 'm2b', title: 'GA release', date: '2026-05-15', type: 'release' }], status: 'active', description: 'Migrate to federated identity with OIDC/SAML support. Deprecate legacy auth tokens and introduce mandatory MFA for all admin accounts.', owner: 'Marcus Chen' },
   { id: 'i3', title: 'Data Warehouse Migration', team: 'Data', color: '#A8BEE0', textColor: '#182A52', startDate: '2026-01-01', endDate: '2026-07-01', row: 2, parentId: null, dependencies: [], milestones: [{ id: 'm3a', title: 'Snowflake cutover', date: '2026-05-15', type: 'deadline' }], status: 'active', description: 'Move from Redshift to Snowflake. Re-model dimensional schema and migrate 3 years of historical data. ETL pipelines rebuilt entirely in dbt.', owner: 'Anita Osei' },
@@ -11,9 +13,14 @@ export const DEMO_PLANNING_ITEMS: PlanningItem[] = [
   { id: 'i8', title: 'Checkout Optimisation', team: 'Growth', color: '#D4A8BC', textColor: '#481636', startDate: '2026-07-01', endDate: '2026-11-01', row: 7, parentId: null, dependencies: ['i6'], milestones: [{ id: 'm8a', title: 'A/B test start', date: '2026-08-15', type: 'review' }, { id: 'm8b', title: 'Full rollout', date: '2026-10-15', type: 'launch' }], status: 'planning', description: 'Reduce checkout drop-off by 20%. One-tap payment, address autofill, and dynamic discount application. Coordinated with mobile redesign.', owner: 'Leila Nasser' },
   { id: 'i9', title: 'GDPR Compliance Audit', team: 'Legal / Eng', color: '#C8CE8A', textColor: '#282E0E', startDate: '2026-08-01', endDate: '2026-12-01', row: 8, parentId: null, dependencies: [], milestones: [{ id: 'm9a', title: 'External audit', date: '2026-10-15', type: 'deadline' }, { id: 'm9b', title: 'Remediation done', date: '2026-11-15', type: 'release' }], status: 'planning', description: 'Annual GDPR compliance review. Data inventory, DPIAs for new features, right-to-erasure pipeline hardening, and DPA updates for EU vendors.', owner: 'Marcus Chen' },
   { id: 'i10', title: 'Design System v3', team: 'Design Eng', color: '#B8C0E8', textColor: '#181E4E', startDate: '2026-09-01', endDate: '2027-01-01', row: 9, parentId: null, dependencies: ['i4'], milestones: [{ id: 'm10a', title: 'Token publish', date: '2026-10-15', type: 'review' }, { id: 'm10b', title: 'v3 stable', date: '2026-12-15', type: 'release' }], status: 'planning', description: 'Major overhaul of the component library. New token system, dark mode support, WCAG 2.2 AA compliance, and Storybook 8 migration.', owner: 'Sophie Larkin' },
-
   { id: 'i1-child-1', title: 'Service dashboard rollout', team: 'Platform', color: '#B8D4B8', textColor: '#1A3A1A', startDate: '2026-02-02', endDate: '2026-04-06', row: 10, parentId: 'i1', dependencies: [], milestones: [], status: 'active', description: 'Demo child item showing a single nested workstream beneath Platform Observability.', owner: 'Priya Agarwal' },
-
   { id: 'i5-child-1', title: 'Online feature serving', team: 'ML Platform', color: '#C4B2E0', textColor: '#2A1A52', startDate: '2026-05-04', endDate: '2026-08-03', row: 11, parentId: 'i5', dependencies: [], milestones: [], status: 'planning', description: 'Demo sub-initiative for the ML Feature Store.', owner: 'Ravi Patel' },
   { id: 'i5-grandchild-1', title: 'Low-latency cache integration', team: 'ML Platform', color: '#C4B2E0', textColor: '#2A1A52', startDate: '2026-06-01', endDate: '2026-07-06', row: 12, parentId: 'i5-child-1', dependencies: [], milestones: [], status: 'planning', description: 'Demo story nested beneath Online feature serving.', owner: 'Ravi Patel' },
 ];
+
+export const DEMO_PLANNING_ITEMS: PlanningItem[] = DEMO_PLANNING_ITEMS_BASE.map(item => ({
+  ...item,
+  externalDependencies: item.id === 'i4'
+    ? [{ id: 'x4a', title: 'Brand assets from agency', date: '2026-05-11' }]
+    : [],
+}));
