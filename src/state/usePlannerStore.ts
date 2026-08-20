@@ -6,6 +6,7 @@ import { parsePlannerJson, PLANNER_STORAGE_KEY, serialisePlanner } from '../doma
 const cloneDemo = () => DEMO_PLANNING_ITEMS.map(item => ({
   ...item,
   dependencies: [...item.dependencies],
+  externalDependencies: item.externalDependencies.map(dependency => ({ ...dependency })),
   milestones: item.milestones.map(milestone => ({ ...milestone })),
 }));
 
