@@ -24,7 +24,7 @@ export function AddModal({ onAdd, onClose, existingRows, items }: Props) {
     const endDate = snapDateToGrid(form.endDate);
     if (endDate <= startDate) return;
     const { parentId, ...rest } = form;
-    onAdd({ id: newId(), ...rest, startDate, endDate, parentId: parentId || null, row: existingRows, dependencies: [], milestones: [] });
+    onAdd({ id: newId(), ...rest, startDate, endDate, parentId: parentId || null, row: existingRows, dependencies: [], externalDependencies: [], milestones: [] });
   };
 
   return (
