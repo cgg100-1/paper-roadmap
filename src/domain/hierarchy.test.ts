@@ -13,6 +13,7 @@ const item = (id: string, parentId: string | null, row: number): PlanningItem =>
   startDate: '2026-01-01',
   endDate: '2026-02-01',
   dependencies: [],
+  externalDependencies: [],
   milestones: [],
   status: 'planning',
   description: '',
