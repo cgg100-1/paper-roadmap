@@ -42,7 +42,7 @@ export function DataEditor({ items, onUpdate, onDelete, onAdd, onImportJson, onR
     return {
       id: newId(), title: 'New planning item', team: '', owner: '', description: '',
       color: palette.bg, textColor: palette.text, startDate: TIMELINE_START, endDate: TIMELINE_END,
-      row, parentId: null, dependencies: [], milestones: [], status: 'planning',
+      row, parentId: null, dependencies: [], externalDependencies: [], milestones: [], status: 'planning',
     };
   };
 
@@ -228,7 +228,7 @@ export function DataEditor({ items, onUpdate, onDelete, onAdd, onImportJson, onR
         </table>
       </div>
 
-      <div className="data-footnote">IDs, dependency IDs and milestone details remain part of the exported JSON; the table keeps the everyday editing surface deliberately human-readable.</div>
+      <div className="data-footnote">IDs, dependency IDs, external dependency stickers and milestone details remain part of the exported JSON; the table keeps the everyday editing surface deliberately human-readable.</div>
 
       {showExcelPaste && (
         <div className="modal-backdrop" onClick={event => event.target === event.currentTarget && setShowExcelPaste(false)}>
