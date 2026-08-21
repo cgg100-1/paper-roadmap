@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paper Roadmap Viewer</title>
+  <link rel="stylesheet" href="./viewer.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="kicker">Read-only · Excel powered</div>
+        <h1>Paper Roadmap Viewer</h1>
+      </div>
+      <div class="actions">
+        <button id="openWorkbook" class="primary">Open roadmap.xlsx</button>
+        <button id="reloadWorkbook" disabled>Reload workbook</button>
+        <input id="fileInput" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+      </div>
+    </header>
+
+    <main>
+      <section id="welcome" class="welcome-card">
+        <div class="sticker-stack" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <div class="eyebrow">No setup required</div>
+          <h2>Choose your Excel roadmap</h2>
+          <p>This viewer reads the workbook in your browser. Nothing is uploaded and there is no front-end editing.</p>
+          <p class="small">Required sheet: <strong>Items</strong>. Optional sheets: <strong>Milestones</strong> and <strong>External Dependencies</strong>.</p>
+        </div>
+      </section>
+
+      <section id="errorBox" class="error-box" hidden></section>
+      <section id="roadmap" class="roadmap" hidden>
+        <div class="roadmap-meta">
+          <span id="workbookName"></span>
+          <span id="itemCount"></span>
+        </div>
+        <div id="planner" class="planner"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./viewer.js"></script>
+</body>
+</html>
